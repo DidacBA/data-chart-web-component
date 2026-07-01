@@ -14,9 +14,9 @@
     "type": "git",
     "url": "git+https://github.com/DidacBA/data-chart-web-component"
   },
-  "homepage": "https://github.com/DidacBA/data-chart-web-component",
+  "homepage": "https://didacba.github.io/data-chart-web-component",
   "bugs": {
-    "url": "https://github.com/DidacBA/data-chart-web-component"
+    "url": "https://github.com/DidacBA/data-chart-web-component/issues"
   },
   "scripts": {
     "dev": "vite",
