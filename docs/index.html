@@ -1,0 +1,1340 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Data Chart — Web Components</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+    <script>
+      (function () {
+        const saved = localStorage.getItem('data-chart-theme');
+        const theme = saved
+          || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
+    <style>
+      :root {
+        --radius: 12px;
+        --font: "Ubuntu", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        --mono: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+      }
+
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #0f172a;
+        --text: #f8fafc;
+        --text-muted: #94a3b8;
+        --heading: #ffffff;
+        --lead: #cbd5e1;
+        --border: rgba(255, 255, 255, 0.12);
+        --surface: #1e293b;
+        --surface-muted: #172033;
+        --surface-hover: #273449;
+        --accent: #93c5fd;
+        --accent-soft: rgba(147, 197, 253, 0.12);
+        --accent-border: rgba(147, 197, 253, 0.4);
+        --code-bg: #1a2438;
+        --code-text: #e2e8f0;
+        --code-border: rgba(255, 255, 255, 0.1);
+        --chip-text: #e2e8f0;
+        --segmented-bg: #172033;
+        --pre-bg: #0c1222;
+        --pre-text: #e2e8f0;
+        --syntax-tag: #7dd3fc;
+        --syntax-attr: #fcd34d;
+        --syntax-val: #86efac;
+        --syntax-comment: #64748b;
+        --chart-fg: #f8fafc;
+        --chart-fg-muted: #94a3b8;
+        --chart-axis: rgba(248, 250, 252, 0.45);
+        --chart-grid: rgba(248, 250, 252, 0.12);
+        --chart-plot: #1a2332;
+        --site-grid: rgba(248, 250, 252, 0.035);
+        --site-grid-major: rgba(248, 250, 252, 0.06);
+        --site-grid-x: 72px;
+        --site-grid-y: 56px;
+        --hero-bg: var(--bg);
+        --hero-text: var(--text);
+        --hero-heading: var(--heading);
+        --hero-lead: var(--lead);
+        --hero-muted: var(--text-muted);
+        --hero-border: var(--border);
+        --hero-surface: var(--surface-muted);
+        --hero-accent: var(--accent);
+        --hero-html: #fbbf24;
+      }
+
+      [data-theme="light"] {
+        color-scheme: light;
+        --bg: #f8fafc;
+        --text: #0f172a;
+        --text-muted: #64748b;
+        --heading: #020617;
+        --lead: #334155;
+        --border: rgba(15, 23, 42, 0.12);
+        --surface: #ffffff;
+        --surface-muted: #f1f5f9;
+        --surface-hover: rgba(15, 23, 42, 0.06);
+        --accent: #2563eb;
+        --accent-soft: rgba(37, 99, 235, 0.1);
+        --accent-border: rgba(37, 99, 235, 0.35);
+        --code-bg: #f1f5f9;
+        --code-text: #0f172a;
+        --code-border: rgba(15, 23, 42, 0.1);
+        --chip-text: #334155;
+        --segmented-bg: rgba(15, 23, 42, 0.06);
+        --pre-bg: #f1f5f9;
+        --pre-text: #0f172a;
+        --syntax-tag: #0369a1;
+        --syntax-attr: #b45309;
+        --syntax-val: #15803d;
+        --syntax-comment: #64748b;
+        --chart-fg: #0f172a;
+        --chart-fg-muted: #64748b;
+        --chart-axis: rgba(15, 23, 42, 0.55);
+        --chart-grid: rgba(15, 23, 42, 0.1);
+        --chart-plot: #ffffff;
+        --site-grid: rgba(15, 23, 42, 0.03);
+        --site-grid-major: rgba(15, 23, 42, 0.055);
+        --site-grid-x: 72px;
+        --site-grid-y: 56px;
+        --hero-bg: var(--bg);
+        --hero-text: var(--text);
+        --hero-heading: var(--heading);
+        --hero-lead: var(--lead);
+        --hero-muted: var(--text-muted);
+        --hero-border: var(--border);
+        --hero-surface: var(--surface-muted);
+        --hero-accent: var(--accent);
+        --hero-html: #c2410c;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: var(--font);
+        background-color: var(--bg);
+        background-image:
+          repeating-linear-gradient(
+            to right,
+            transparent,
+            transparent calc(var(--site-grid-x) - 1px),
+            var(--site-grid) calc(var(--site-grid-x) - 1px),
+            var(--site-grid) var(--site-grid-x)
+          ),
+          repeating-linear-gradient(
+            to bottom,
+            transparent,
+            transparent calc(var(--site-grid-y) - 1px),
+            var(--site-grid) calc(var(--site-grid-y) - 1px),
+            var(--site-grid) var(--site-grid-y)
+          ),
+          repeating-linear-gradient(
+            to right,
+            transparent,
+            transparent calc(var(--site-grid-x) * 5 - 1px),
+            var(--site-grid-major) calc(var(--site-grid-x) * 5 - 1px),
+            var(--site-grid-major) calc(var(--site-grid-x) * 5)
+          ),
+          repeating-linear-gradient(
+            to bottom,
+            transparent,
+            transparent calc(var(--site-grid-y) * 4 - 1px),
+            var(--site-grid-major) calc(var(--site-grid-y) * 4 - 1px),
+            var(--site-grid-major) calc(var(--site-grid-y) * 4)
+          );
+        background-attachment: fixed;
+        color: var(--text);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .site-toolbar {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 100;
+      }
+
+      .site-toolbar .segmented button {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+      }
+
+      .theme-switcher-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .hero {
+        margin-bottom: 0;
+        padding: clamp(64px, 12vw, 96px) 24px clamp(56px, 8vw, 80px);
+        background: transparent;
+        color: var(--hero-text);
+      }
+
+      .hero-content {
+        max-width: 1120px;
+        margin: 0 auto;
+      }
+
+      .hero-inner {
+        max-width: 680px;
+      }
+
+      .hero-eyebrow,
+      .section-eyebrow {
+        display: block;
+        margin: 0 0 12px;
+        padding: 0;
+        color: var(--accent);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+      }
+
+      .section-eyebrow  {
+        text-transform: uppercase;
+      }
+
+      .hero-eyebrow {
+        margin-bottom: 20px;
+      }
+
+      .hero h1 {
+        margin: 0 0 20px;
+        font-size: clamp(3.5rem, 10vw, 6rem);
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        color: var(--hero-heading);
+      }
+
+      .hero-title-main {
+        display: block;
+      }
+
+      .hero-title-accent {
+        display: block;
+        color: var(--accent);
+      }
+
+      .hero-title-html {
+        font-family: "Times New Roman", Times, serif;
+        color: var(--hero-html);
+      }
+
+      .hero-lead {
+        margin: 0 0 32px;
+        max-width: 560px;
+        color: var(--hero-lead);
+        font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+        line-height: 1.65;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 32px;
+      }
+
+      .hero-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5em;
+        padding: 12px 20px;
+        border-radius: 999px;
+        border: 1px solid var(--hero-border);
+        background: var(--hero-surface);
+        color: var(--hero-heading);
+        font: inherit;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      .hero-link:hover {
+        background: var(--surface-hover);
+        border-color: var(--accent-border);
+      }
+
+      .hero-link:focus-visible {
+        outline: 2px solid var(--hero-accent);
+        outline-offset: 2px;
+      }
+
+      .hero-link svg {
+        width: 1em;
+        height: 1em;
+        flex-shrink: 0;
+        fill: currentColor;
+      }
+
+      .badge {
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--hero-border);
+        background: var(--hero-surface);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--hero-accent);
+      }
+
+
+      .section-title {
+        margin: 0 0 8px;
+        font-size: clamp(1.5rem, 3vw, 2rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.15;
+        color: var(--hero-heading);
+      }
+
+      .section-lead {
+        margin: 0;
+        max-width: 520px;
+        color: var(--hero-muted);
+        font-size: 1rem;
+        line-height: 1.65;
+      }
+
+      .page {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: clamp(48px, 8vw, 72px) 24px 64px;
+      }
+
+      .gallery-section {
+        margin-bottom: clamp(48px, 8vw, 72px);
+      }
+
+      .gallery-header {
+        margin-bottom: 28px;
+      }
+
+      .gallery {
+        display: flex;
+        flex-direction: column;
+        gap: clamp(48px, 8vw, 72px);
+      }
+
+      .chart-card {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .chart-card-title {
+        margin: 0;
+        font-size: 1.125rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--heading);
+      }
+
+      .chart-card-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: clamp(20px, 4vw, 32px);
+        align-items: center;
+      }
+
+      @media (max-width: 900px) {
+        .chart-card-body {
+          grid-template-columns: 1fr;
+          align-items: stretch;
+        }
+      }
+
+      .chart-card-preview {
+        min-width: 0;
+        overflow: hidden;
+        padding: clamp(16px, 3vw, 32px);
+        border: 1px solid var(--border);
+        border-radius: calc(var(--radius) + 4px);
+        background: var(--surface);
+      }
+
+      .chart-card-markup {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .chart-code-label {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      data-chart {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        min-height: clamp(240px, 32vw, 320px);
+        --chart-text: var(--chart-fg);
+        --chart-text-muted: var(--chart-fg-muted);
+        --chart-axis-color: var(--chart-axis);
+        --chart-grid-color: var(--chart-grid);
+        --chart-plot-bg: var(--chart-plot);
+      }
+
+      .playground-section {
+        margin-bottom: clamp(48px, 8vw, 72px);
+        scroll-margin-top: 24px;
+      }
+
+      .gallery-section,
+      .docs-section,
+      .usage-section {
+        scroll-margin-top: 24px;
+      }
+
+      .playground-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 24px;
+      }
+
+      .playground-header-text {
+        flex: 1;
+        min-width: min(100%, 280px);
+      }
+
+      .playground-panel {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+        overflow: hidden;
+      }
+
+      .playground-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-muted);
+      }
+
+      .playground-toolbar-label {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--hero-muted);
+      }
+
+      .segmented {
+        display: inline-flex;
+        flex-wrap: wrap;
+        padding: 4px;
+        gap: 4px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--segmented-bg);
+      }
+
+      .segmented button {
+        appearance: none;
+        border: none;
+        background: transparent;
+        color: var(--hero-muted);
+        padding: 8px 14px;
+        border-radius: 999px;
+        font: inherit;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .segmented button:hover {
+        color: var(--hero-heading);
+      }
+
+      .segmented button[aria-pressed="true"] {
+        background: var(--hero-surface);
+        color: var(--hero-heading);
+        box-shadow: inset 0 0 0 1px var(--hero-border);
+      }
+
+      .segmented button:focus-visible {
+        outline: 2px solid var(--hero-accent);
+        outline-offset: 2px;
+      }
+
+      .playground-body {
+        padding: clamp(16px, 3cqi, 24px);
+        min-width: 0;
+      }
+
+      .usage-section {
+        border-top: 1px solid var(--border);
+        padding-top: clamp(48px, 8vw, 72px);
+      }
+
+      .docs-section {
+        margin-bottom: clamp(48px, 8vw, 72px);
+      }
+
+      .docs-header {
+        margin-bottom: 28px;
+      }
+
+      .docs-grid {
+        display: grid;
+        gap: 24px;
+      }
+
+      .docs-card {
+        border: 1px solid var(--border);
+        border-radius: calc(var(--radius) + 4px);
+        background: var(--surface);
+      }
+
+      .docs-card-header {
+        padding: 24px 24px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .docs-card-header h3 {
+        margin: 0;
+        font-size: 1.0625rem;
+        font-weight: 700;
+        color: var(--heading);
+        letter-spacing: -0.02em;
+      }
+
+      .docs-card-header h3 code {
+        font-family: var(--mono);
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: var(--heading);
+        background: var(--accent-soft);
+        padding: 0.2em 0.55em;
+        border-radius: 8px;
+      }
+
+      .docs-card-header p {
+        margin: 12px 0 0;
+        max-width: 62ch;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        line-height: 1.65;
+      }
+
+      .docs-card-header p code {
+        font-family: var(--mono);
+        font-size: 0.8125rem;
+        padding: 0.1em 0.35em;
+        border-radius: 6px;
+        background: var(--surface-muted);
+        color: var(--text);
+      }
+
+      .docs-card-body {
+        padding: 0;
+      }
+
+      .docs-table-wrap {
+        overflow-x: auto;
+      }
+
+      .docs-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.875rem;
+      }
+
+      .docs-table th,
+      .docs-table td {
+        padding: 16px 24px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .docs-table thead th {
+        padding-top: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      .docs-table tbody th {
+        width: 10rem;
+        padding-right: 12px;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      .docs-table tbody th code {
+        text-transform: none;
+        letter-spacing: normal;
+        font-size: 0.8125rem;
+        font-weight: 600;
+      }
+
+      .docs-table tbody tr:not(:last-child) th,
+      .docs-table tbody tr:not(:last-child) td {
+        border-bottom: 1px solid var(--border);
+      }
+
+      .docs-table td {
+        color: var(--text);
+        line-height: 1.6;
+      }
+
+      .docs-table code {
+        font-family: var(--mono);
+        font-size: 0.8125rem;
+        padding: 0.12em 0.45em;
+        border-radius: 6px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        white-space: nowrap;
+      }
+
+      .docs-table .docs-default {
+        display: block;
+        margin-top: 8px;
+        font-size: 0.8125rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+      }
+
+      .docs-table .docs-default code {
+        font-size: 0.75rem;
+        background: var(--surface-muted);
+        color: var(--text-muted);
+      }
+
+      .docs-parts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .docs-parts code {
+        display: inline-block;
+        padding: 5px 11px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--surface-muted);
+        color: var(--text);
+        font-size: 0.75rem;
+        white-space: normal;
+      }
+
+      .usage-header {
+        margin-bottom: 24px;
+      }
+
+      .usage-block {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: var(--surface);
+      }
+
+      .usage-block pre {
+        margin: 0;
+        padding: 24px;
+        overflow-x: auto;
+        background: var(--pre-bg);
+        color: var(--pre-text);
+        font-family: var(--mono);
+        font-size: 0.8125rem;
+        line-height: 1.65;
+      }
+
+      .usage-block code .tag { color: var(--syntax-tag); }
+      .usage-block code .attr { color: var(--syntax-attr); }
+      .usage-block code .val { color: var(--syntax-val); }
+      .usage-block code .comment { color: var(--syntax-comment); }
+
+      @media (max-width: 640px) {
+        .page {
+          padding: 40px 16px 48px;
+        }
+
+        .site-toolbar {
+          top: 12px;
+          right: 12px;
+          left: 12px;
+        }
+
+        .site-toolbar .segmented {
+          width: 100%;
+          justify-content: center;
+          border-radius: var(--radius);
+        }
+
+        .gallery {
+          gap: 40px;
+        }
+
+        .chart-card-preview,
+        .chart-card-markup {
+          width: 100%;
+        }
+
+        .playground-header {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .segmented {
+          width: 100%;
+          border-radius: var(--radius);
+        }
+
+        .segmented button {
+          flex: 1 1 auto;
+          text-align: center;
+        }
+      }
+    </style>
+    <script type="module" crossorigin src="/assets/index-Da_8HVol.js"></script>
+  </head>
+  <body>
+    <div class="site-toolbar">
+      <span class="theme-switcher-label" id="theme-switcher-label">Color theme</span>
+      <div class="segmented theme-switcher" role="group" aria-labelledby="theme-switcher-label">
+        <button type="button" data-theme="light" aria-pressed="false">Light</button>
+        <button type="button" data-theme="dark" aria-pressed="false">Dark</button>
+      </div>
+    </div>
+
+    <header class="hero" id="top">
+      <div class="hero-content">
+        <div class="hero-inner">
+          <span class="hero-eyebrow">npm i data-chart-web-component</span>
+          <h1>
+            <span class="hero-title-main">Charts</span>
+            <span class="hero-title-accent">in plain <span class="hero-title-html">HTML</span></span>
+          </h1>
+          <p class="hero-lead">Lightweight · Framework-agnostic · Declarative</p>
+          <div class="hero-actions">
+            <a class="hero-link" href="#playground">
+              Interactive playground
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 0 1 1.414 0l6 6a1 1 0 0 1 0 1.414l-6 6a1 1 0 0 1-1.414-1.414L14.586 11H3a1 1 0 1 1 0-2h11.586l-4.293-4.293a1 1 0 0 1 0-1.414z" clip-rule="evenodd" />
+              </svg>
+            </a>
+            <a class="hero-link" href="https://github.com/DidacBA/data-chart-web-component" target="_blank" rel="noopener noreferrer">
+              View on GitHub
+              <svg class="btn-gh__mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.78 0 12.29c0 5.2 3.44 9.6 8.2 11.16.6.1.82-.25.82-.56v-2.17c-3.34.71-4.04-1.4-4.04-1.4-.55-1.36-1.34-1.72-1.34-1.72-1.1-.73.08-.72.08-.72 1.2.08 1.84 1.22 1.84 1.22 1.07 1.8 2.8 1.28 3.49.98.1-.76.42-1.28.76-1.57-2.67-.3-5.47-1.31-5.47-5.84 0-1.29.47-2.34 1.23-3.17-.12-.3-.53-1.52.12-3.16 0 0 1-.32 3.3 1.21a11.6 11.6 0 0 1 6 0c2.28-1.53 3.29-1.21 3.29-1.21.65 1.64.24 2.86.12 3.16.77.83 1.23 1.88 1.23 3.17 0 4.54-2.81 5.53-5.49 5.83.43.37.81 1.1.81 2.22v3.29c0 .32.22.68.83.56C20.57 21.88 24 17.49 24 12.29 24 5.78 18.63.5 12 .5Z"></path></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page">
+      <section class="gallery-section" id="gallery" aria-labelledby="gallery-title">
+        <div class="gallery-header">
+          <span class="section-eyebrow">Examples</span>
+          <h2 class="section-title" id="gallery-title">All chart types</h2>
+          <p class="section-lead">Each chart type with the HTML markup used to render it.</p>
+        </div>
+
+        <div class="gallery">
+          <article class="chart-card">
+            <h3 class="chart-card-title">Column</h3>
+            <div class="chart-card-body">
+              <div class="chart-card-preview">
+                <data-chart type="column">
+                  <data-chart-group label="Revenue" color="#3b82f6">
+                    <data-chart-point label="Jan" value="30"></data-chart-point>
+                    <data-chart-point label="Feb" value="50"></data-chart-point>
+                    <data-chart-point label="Mar" value="40"></data-chart-point>
+                    <data-chart-point label="Apr" value="70"></data-chart-point>
+                    <data-chart-point label="May" value="60"></data-chart-point>
+                  </data-chart-group>
+                  <data-chart-group label="Costs" color="#ef4444">
+                    <data-chart-point label="Jan" value="18"></data-chart-point>
+                    <data-chart-point label="Feb" value="28"></data-chart-point>
+                    <data-chart-point label="Mar" value="22"></data-chart-point>
+                    <data-chart-point label="Apr" value="35"></data-chart-point>
+                    <data-chart-point label="May" value="30"></data-chart-point>
+                  </data-chart-group>
+                </data-chart>
+              </div>
+              <div class="chart-card-markup">
+                <span class="chart-code-label">HTML</span>
+                <div class="usage-block">
+                <pre><code>&lt;<span class="tag">data-chart</span> <span class="attr">type</span>=<span class="val">"column"</span>&gt;
+  &lt;<span class="tag">data-chart-group</span> <span class="attr">label</span>=<span class="val">"Revenue"</span> <span class="attr">color</span>=<span class="val">"#3b82f6"</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Jan"</span> <span class="attr">value</span>=<span class="val">"30"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Feb"</span> <span class="attr">value</span>=<span class="val">"50"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Mar"</span> <span class="attr">value</span>=<span class="val">"40"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Apr"</span> <span class="attr">value</span>=<span class="val">"70"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"May"</span> <span class="attr">value</span>=<span class="val">"60"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+  &lt;/<span class="tag">data-chart-group</span>&gt;
+  &lt;<span class="tag">data-chart-group</span> <span class="attr">label</span>=<span class="val">"Costs"</span> <span class="attr">color</span>=<span class="val">"#ef4444"</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Jan"</span> <span class="attr">value</span>=<span class="val">"18"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Feb"</span> <span class="attr">value</span>=<span class="val">"28"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Mar"</span> <span class="attr">value</span>=<span class="val">"22"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Apr"</span> <span class="attr">value</span>=<span class="val">"35"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"May"</span> <span class="attr">value</span>=<span class="val">"30"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+  &lt;/<span class="tag">data-chart-group</span>&gt;
+&lt;/<span class="tag">data-chart</span>&gt;</code></pre>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="chart-card">
+            <h3 class="chart-card-title">Bar</h3>
+            <div class="chart-card-body">
+              <div class="chart-card-preview">
+                <data-chart type="bar">
+                  <data-chart-point label="Product A" value="45" color="#3b82f6"></data-chart-point>
+                  <data-chart-point label="Product B" value="60" color="#ef4444"></data-chart-point>
+                  <data-chart-point label="Product C" value="35" color="#10b981"></data-chart-point>
+                  <data-chart-point label="Product D" value="75" color="#f59e0b"></data-chart-point>
+                </data-chart>
+              </div>
+              <div class="chart-card-markup">
+                <span class="chart-code-label">HTML</span>
+                <div class="usage-block">
+                <pre><code>&lt;<span class="tag">data-chart</span> <span class="attr">type</span>=<span class="val">"bar"</span>&gt;
+  &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Product A"</span> <span class="attr">value</span>=<span class="val">"45"</span> <span class="attr">color</span>=<span class="val">"#3b82f6"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+  &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Product B"</span> <span class="attr">value</span>=<span class="val">"60"</span> <span class="attr">color</span>=<span class="val">"#ef4444"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+  &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Product C"</span> <span class="attr">value</span>=<span class="val">"35"</span> <span class="attr">color</span>=<span class="val">"#10b981"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+  &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Product D"</span> <span class="attr">value</span>=<span class="val">"75"</span> <span class="attr">color</span>=<span class="val">"#f59e0b"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+&lt;/<span class="tag">data-chart</span>&gt;</code></pre>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="chart-card">
+            <h3 class="chart-card-title">Line</h3>
+            <div class="chart-card-body">
+              <div class="chart-card-preview">
+                <data-chart type="line">
+                  <data-chart-group label="Revenue" color="#3b82f6">
+                    <data-chart-point label="Week 1" value="20"></data-chart-point>
+                    <data-chart-point label="Week 2" value="35"></data-chart-point>
+                    <data-chart-point label="Week 3" value="28"></data-chart-point>
+                    <data-chart-point label="Week 4" value="55"></data-chart-point>
+                    <data-chart-point label="Week 5" value="45"></data-chart-point>
+                  </data-chart-group>
+                  <data-chart-group label="Costs" color="#ef4444">
+                    <data-chart-point label="Week 1" value="15"></data-chart-point>
+                    <data-chart-point label="Week 2" value="22"></data-chart-point>
+                    <data-chart-point label="Week 3" value="18"></data-chart-point>
+                    <data-chart-point label="Week 4" value="30"></data-chart-point>
+                    <data-chart-point label="Week 5" value="25"></data-chart-point>
+                  </data-chart-group>
+                </data-chart>
+              </div>
+              <div class="chart-card-markup">
+                <span class="chart-code-label">HTML</span>
+                <div class="usage-block">
+                <pre><code>&lt;<span class="tag">data-chart</span> <span class="attr">type</span>=<span class="val">"line"</span>&gt;
+  &lt;<span class="tag">data-chart-group</span> <span class="attr">label</span>=<span class="val">"Revenue"</span> <span class="attr">color</span>=<span class="val">"#3b82f6"</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Week 1"</span> <span class="attr">value</span>=<span class="val">"20"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Week 2"</span> <span class="attr">value</span>=<span class="val">"35"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Week 3"</span> <span class="attr">value</span>=<span class="val">"28"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Week 4"</span> <span class="attr">value</span>=<span class="val">"55"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Week 5"</span> <span class="attr">value</span>=<span class="val">"45"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+  &lt;/<span class="tag">data-chart-group</span>&gt;
+  &lt;<span class="tag">data-chart-group</span> <span class="attr">label</span>=<span class="val">"Costs"</span> <span class="attr">color</span>=<span class="val">"#ef4444"</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Week 1"</span> <span class="attr">value</span>=<span class="val">"15"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Week 2"</span> <span class="attr">value</span>=<span class="val">"22"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Week 3"</span> <span class="attr">value</span>=<span class="val">"18"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Week 4"</span> <span class="attr">value</span>=<span class="val">"30"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Week 5"</span> <span class="attr">value</span>=<span class="val">"25"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+  &lt;/<span class="tag">data-chart-group</span>&gt;
+&lt;/<span class="tag">data-chart</span>&gt;</code></pre>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="chart-card">
+            <h3 class="chart-card-title">Stacked area</h3>
+            <div class="chart-card-body">
+              <div class="chart-card-preview">
+                <data-chart type="area">
+                  <data-chart-group label="Organic" color="#3b82f6">
+                    <data-chart-point label="Q1" value="20"></data-chart-point>
+                    <data-chart-point label="Q2" value="35"></data-chart-point>
+                    <data-chart-point label="Q3" value="28"></data-chart-point>
+                    <data-chart-point label="Q4" value="45"></data-chart-point>
+                  </data-chart-group>
+                  <data-chart-group label="Paid" color="#ef4444">
+                    <data-chart-point label="Q1" value="15"></data-chart-point>
+                    <data-chart-point label="Q2" value="22"></data-chart-point>
+                    <data-chart-point label="Q3" value="18"></data-chart-point>
+                    <data-chart-point label="Q4" value="30"></data-chart-point>
+                  </data-chart-group>
+                  <data-chart-group label="Referral" color="#10b981">
+                    <data-chart-point label="Q1" value="8"></data-chart-point>
+                    <data-chart-point label="Q2" value="12"></data-chart-point>
+                    <data-chart-point label="Q3" value="10"></data-chart-point>
+                    <data-chart-point label="Q4" value="15"></data-chart-point>
+                  </data-chart-group>
+                </data-chart>
+              </div>
+              <div class="chart-card-markup">
+                <span class="chart-code-label">HTML</span>
+                <div class="usage-block">
+                <pre><code>&lt;<span class="tag">data-chart</span> <span class="attr">type</span>=<span class="val">"area"</span>&gt;
+  &lt;<span class="tag">data-chart-group</span> <span class="attr">label</span>=<span class="val">"Organic"</span> <span class="attr">color</span>=<span class="val">"#3b82f6"</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Q1"</span> <span class="attr">value</span>=<span class="val">"20"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Q2"</span> <span class="attr">value</span>=<span class="val">"35"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Q3"</span> <span class="attr">value</span>=<span class="val">"28"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Q4"</span> <span class="attr">value</span>=<span class="val">"45"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+  &lt;/<span class="tag">data-chart-group</span>&gt;
+  &lt;<span class="tag">data-chart-group</span> <span class="attr">label</span>=<span class="val">"Paid"</span> <span class="attr">color</span>=<span class="val">"#ef4444"</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Q1"</span> <span class="attr">value</span>=<span class="val">"15"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Q2"</span> <span class="attr">value</span>=<span class="val">"22"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Q3"</span> <span class="attr">value</span>=<span class="val">"18"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Q4"</span> <span class="attr">value</span>=<span class="val">"30"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+  &lt;/<span class="tag">data-chart-group</span>&gt;
+  &lt;<span class="tag">data-chart-group</span> <span class="attr">label</span>=<span class="val">"Referral"</span> <span class="attr">color</span>=<span class="val">"#10b981"</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Q1"</span> <span class="attr">value</span>=<span class="val">"8"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Q2"</span> <span class="attr">value</span>=<span class="val">"12"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Q3"</span> <span class="attr">value</span>=<span class="val">"10"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Q4"</span> <span class="attr">value</span>=<span class="val">"15"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+  &lt;/<span class="tag">data-chart-group</span>&gt;
+&lt;/<span class="tag">data-chart</span>&gt;</code></pre>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="chart-card">
+            <h3 class="chart-card-title">Scatter</h3>
+            <div class="chart-card-body">
+              <div class="chart-card-preview">
+                <data-chart type="scatter" value-label="Height (cm)" category-label="Weight (kg)">
+                  <data-chart-group label="Group A" color="#3b82f6">
+                    <data-chart-point label="A1" x="52" value="158"></data-chart-point>
+                    <data-chart-point label="A2" x="58" value="165"></data-chart-point>
+                    <data-chart-point label="A3" x="63" value="172"></data-chart-point>
+                    <data-chart-point label="A4" x="68" value="178"></data-chart-point>
+                  </data-chart-group>
+                  <data-chart-group label="Group B" color="#ef4444">
+                    <data-chart-point label="B1" x="55" value="162"></data-chart-point>
+                    <data-chart-point label="B2" x="61" value="168"></data-chart-point>
+                    <data-chart-point label="B3" x="70" value="175"></data-chart-point>
+                    <data-chart-point label="B4" x="75" value="182"></data-chart-point>
+                  </data-chart-group>
+                </data-chart>
+              </div>
+              <div class="chart-card-markup">
+                <span class="chart-code-label">HTML</span>
+                <div class="usage-block">
+                <pre><code>&lt;<span class="tag">data-chart</span> <span class="attr">type</span>=<span class="val">"scatter"</span>
+  <span class="attr">value-label</span>=<span class="val">"Height (cm)"</span>
+  <span class="attr">category-label</span>=<span class="val">"Weight (kg)"</span>&gt;
+  &lt;<span class="tag">data-chart-group</span> <span class="attr">label</span>=<span class="val">"Group A"</span> <span class="attr">color</span>=<span class="val">"#3b82f6"</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"A1"</span> <span class="attr">x</span>=<span class="val">"52"</span> <span class="attr">value</span>=<span class="val">"158"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"A2"</span> <span class="attr">x</span>=<span class="val">"58"</span> <span class="attr">value</span>=<span class="val">"165"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"A3"</span> <span class="attr">x</span>=<span class="val">"63"</span> <span class="attr">value</span>=<span class="val">"172"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"A4"</span> <span class="attr">x</span>=<span class="val">"68"</span> <span class="attr">value</span>=<span class="val">"178"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+  &lt;/<span class="tag">data-chart-group</span>&gt;
+  &lt;<span class="tag">data-chart-group</span> <span class="attr">label</span>=<span class="val">"Group B"</span> <span class="attr">color</span>=<span class="val">"#ef4444"</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"B1"</span> <span class="attr">x</span>=<span class="val">"55"</span> <span class="attr">value</span>=<span class="val">"162"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"B2"</span> <span class="attr">x</span>=<span class="val">"61"</span> <span class="attr">value</span>=<span class="val">"168"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"B3"</span> <span class="attr">x</span>=<span class="val">"70"</span> <span class="attr">value</span>=<span class="val">"175"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"B4"</span> <span class="attr">x</span>=<span class="val">"75"</span> <span class="attr">value</span>=<span class="val">"182"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+  &lt;/<span class="tag">data-chart-group</span>&gt;
+&lt;/<span class="tag">data-chart</span>&gt;</code></pre>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="chart-card">
+            <h3 class="chart-card-title">Pie</h3>
+            <div class="chart-card-body">
+              <div class="chart-card-preview">
+                <data-chart type="pie">
+                  <data-chart-point label="Desktop" value="40" color="#3b82f6"></data-chart-point>
+                  <data-chart-point label="Mobile" value="35" color="#ef4444"></data-chart-point>
+                  <data-chart-point label="Tablet" value="20" color="#10b981"></data-chart-point>
+                  <data-chart-point label="Other" value="5" color="#f59e0b"></data-chart-point>
+                </data-chart>
+              </div>
+              <div class="chart-card-markup">
+                <span class="chart-code-label">HTML</span>
+                <div class="usage-block">
+                <pre><code>&lt;<span class="tag">data-chart</span> <span class="attr">type</span>=<span class="val">"pie"</span>&gt;
+  &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Desktop"</span> <span class="attr">value</span>=<span class="val">"40"</span> <span class="attr">color</span>=<span class="val">"#3b82f6"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+  &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Mobile"</span> <span class="attr">value</span>=<span class="val">"35"</span> <span class="attr">color</span>=<span class="val">"#ef4444"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+  &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Tablet"</span> <span class="attr">value</span>=<span class="val">"20"</span> <span class="attr">color</span>=<span class="val">"#10b981"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+  &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Other"</span> <span class="attr">value</span>=<span class="val">"5"</span> <span class="attr">color</span>=<span class="val">"#f59e0b"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+&lt;/<span class="tag">data-chart</span>&gt;</code></pre>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="playground-section" id="playground" aria-labelledby="playground-title">
+        <div class="playground-header">
+          <div class="playground-header-text">
+            <span class="section-eyebrow">Interactive</span>
+            <h2 class="section-title" id="playground-title">Playground</h2>
+            <p class="section-lead">Switch chart types and see the same dataset rendered in different ways.</p>
+          </div>
+        </div>
+        <div class="playground-panel">
+          <div class="playground-toolbar">
+            <span class="playground-toolbar-label">Chart type</span>
+            <div class="segmented" role="group" aria-label="Chart type">
+              <button type="button" data-type="column" aria-pressed="true">Column</button>
+              <button type="button" data-type="bar" aria-pressed="false">Bar</button>
+              <button type="button" data-type="line" aria-pressed="false">Line</button>
+              <button type="button" data-type="area" aria-pressed="false">Area</button>
+              <button type="button" data-type="scatter" aria-pressed="false">Scatter</button>
+              <button type="button" data-type="pie" aria-pressed="false">Pie</button>
+            </div>
+          </div>
+          <div class="playground-body">
+            <data-chart id="playgroundChart" class="playground-chart" type="column">
+              <data-chart-group label="Revenue" color="#3b82f6">
+                <data-chart-point label="Jan" x="1" value="30"></data-chart-point>
+                <data-chart-point label="Feb" x="2" value="50"></data-chart-point>
+                <data-chart-point label="Mar" x="3" value="40"></data-chart-point>
+                <data-chart-point label="Apr" x="4" value="70"></data-chart-point>
+                <data-chart-point label="May" x="5" value="60"></data-chart-point>
+                <data-chart-point label="June" x="6" value="70"></data-chart-point>
+              </data-chart-group>
+              <data-chart-group label="Costs" color="#ef4444">
+                <data-chart-point label="Jan" x="1" value="18"></data-chart-point>
+                <data-chart-point label="Feb" x="2" value="28"></data-chart-point>
+                <data-chart-point label="Mar" x="3" value="22"></data-chart-point>
+                <data-chart-point label="Apr" x="4" value="35"></data-chart-point>
+                <data-chart-point label="May" x="5" value="30"></data-chart-point>
+                <data-chart-point label="June" x="6" value="32"></data-chart-point>
+              </data-chart-group>
+            </data-chart>
+          </div>
+        </div>
+      </section>
+
+      <section class="docs-section" id="components" aria-labelledby="components-title">
+        <div class="docs-header">
+          <span class="section-eyebrow">Reference</span>
+          <h2 class="section-title" id="components-title">Components</h2>
+          <p class="section-lead">Three custom elements compose every chart. Import them once, use anywhere in your HTML.</p>
+        </div>
+
+        <div class="docs-grid">
+          <article class="docs-card">
+            <div class="docs-card-header">
+              <h3><code>&lt;data-chart&gt;</code></h3>
+              <p>The root chart element. Set <code>type</code> to choose the visualization and configure axes, styling, and behavior with attributes. Renders into shadow DOM and exposes <code>::part()</code> hooks for styling.</p>
+            </div>
+            <div class="docs-card-body">
+              <div class="docs-table-wrap">
+                <table class="docs-table">
+                  <tbody>
+                    <tr>
+                      <th scope="row">Children</th>
+                      <td><code>&lt;data-chart-point&gt;</code> for single-series data, or <code>&lt;data-chart-group&gt;</code> elements for multi-series charts.</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Chart types</th>
+                      <td><code>column</code>, <code>bar</code>, <code>line</code>, <code>area</code> (stacked), <code>scatter</code>, <code>pie</code></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Property</th>
+                      <td><code>chart.type</code> — get or set the chart type from JavaScript (e.g. <code>document.querySelector('data-chart').type = 'line'</code>).</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Shadow parts</th>
+                      <td>
+                        <div class="docs-parts">
+                          <code>chart</code>
+                          <code>plot</code>
+                          <code>plot-area</code>
+                          <code>column</code>
+                          <code>bar</code>
+                          <code>line</code>
+                          <code>area</code>
+                          <code>slice</code>
+                          <code>point</code>
+                          <code>legend</code>
+                          <code>value-label</code>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Accessibility</th>
+                      <td>Charts include a spoken summary with key findings (highs, lows, trends) and a data table for screen readers. Focus the chart with Tab to hear the summary.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+
+          <article class="docs-card">
+            <div class="docs-card-header">
+              <h3><code>&lt;data-chart-group&gt;</code></h3>
+              <p>Defines a named series for multi-series column, bar, line, area, scatter, and pie charts. Each group contains its own data points.</p>
+            </div>
+            <div class="docs-card-body">
+              <div class="docs-table-wrap">
+                <table class="docs-table">
+                  <tbody>
+                    <tr>
+                      <th scope="row">Attributes</th>
+                      <td><code>label</code> (or <code>name</code>) — series name shown in the legend. <code>color</code> — series color applied to all points in the group.</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Children</th>
+                      <td>One or more <code>&lt;data-chart-point&gt;</code> elements.</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Pie charts</th>
+                      <td>Multiple groups render as a panel of separate pie charts, one per group.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+
+          <article class="docs-card">
+            <div class="docs-card-header">
+              <h3><code>&lt;data-chart-point&gt;</code></h3>
+              <p>A single data point. Attribute changes trigger an automatic chart re-render via a bubbling <code>chart-update</code> event.</p>
+            </div>
+            <div class="docs-card-body">
+              <div class="docs-table-wrap">
+                <table class="docs-table">
+                  <tbody>
+                    <tr>
+                      <th scope="row">Attributes</th>
+                      <td>
+                        <code>label</code> — category or segment name.
+                        <code>value</code> — numeric value (Y axis for scatter).
+                        <code>x</code> — horizontal position for scatter plots.
+                        <code>color</code> — override point color.
+                        <code>group</code> — series name when not using <code>&lt;data-chart-group&gt;</code>.
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Placement</th>
+                      <td>Direct child of <code>&lt;data-chart&gt;</code> for single-series charts, or nested inside <code>&lt;data-chart-group&gt;</code> for multi-series.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="docs-section" id="attributes" aria-labelledby="attributes-title">
+        <div class="docs-header">
+          <span class="section-eyebrow">Reference</span>
+          <h2 class="section-title" id="attributes-title">Attributes</h2>
+          <p class="section-lead">All configuration on <code>&lt;data-chart&gt;</code> is declarative. Theme attributes map to CSS custom properties on the element.</p>
+        </div>
+
+        <div class="docs-grid">
+          <article class="docs-card">
+            <div class="docs-card-header">
+              <h3>Chart options</h3>
+            </div>
+            <div class="docs-card-body">
+              <div class="docs-table-wrap">
+                <table class="docs-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Attribute</th>
+                      <th scope="col">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row"><code>type</code></th>
+                      <td>Chart type: <code>column</code>, <code>bar</code>, <code>line</code>, <code>area</code>, <code>scatter</code>, or <code>pie</code>.
+                        <span class="docs-default">Default: <code>column</code></span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>value-label</code></th>
+                      <td>Label for the value axis (Y). Alias: <code>y-label</code>.
+                        <span class="docs-default">Default varies by chart type</span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>category-label</code></th>
+                      <td>Label for the category axis (X). Alias: <code>x-label</code>.
+                        <span class="docs-default">Default varies by chart type</span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>height</code></th>
+                      <td>Plot height. Accepts a number (pixels) or any CSS length (e.g. <code>20em</code>).</td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>show-values</code></th>
+                      <td>Display numeric values on data points. Set to <code>false</code> to hide.
+                        <span class="docs-default">Default: <code>true</code></span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>show-legend</code></th>
+                      <td>Show the series legend. Set to <code>false</code> to hide. When omitted, legend appears for multi-series charts.
+                        <span class="docs-default">Default: auto</span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>colors</code></th>
+                      <td>Comma-separated color palette used when points have no explicit <code>color</code>.
+                        <span class="docs-default">Default: built-in palette</span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>scale-padding</code></th>
+                      <td>Multiplier applied above the data maximum when computing axis scale.
+                        <span class="docs-default">Default: <code>1.15</code></span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>empty-message</code></th>
+                      <td>Message shown when no data points are provided.
+                        <span class="docs-default">Default: <code>No data points provided</code></span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+
+          <article class="docs-card">
+            <div class="docs-card-header">
+              <h3>Theme &amp; styling</h3>
+              <p>These attributes set CSS custom properties on the <code>&lt;data-chart&gt;</code> element. You can also set the variables directly in CSS.</p>
+            </div>
+            <div class="docs-card-body">
+              <div class="docs-table-wrap">
+                <table class="docs-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Attribute</th>
+                      <th scope="col">CSS variable</th>
+                      <th scope="col">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row"><code>font</code></th>
+                      <td><code>--chart-font</code></td>
+                      <td>Chart font family.</td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>text-color</code></th>
+                      <td><code>--chart-text</code></td>
+                      <td>Primary text color.</td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>axis-color</code></th>
+                      <td><code>--chart-axis-color</code></td>
+                      <td>Axis label color.</td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>grid-color</code></th>
+                      <td><code>--chart-grid-color</code></td>
+                      <td>Grid line color.</td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>plot-color</code></th>
+                      <td><code>--chart-plot-bg</code></td>
+                      <td>Plot area background.</td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>line-width</code></th>
+                      <td><code>--chart-line-width</code></td>
+                      <td>Line and stroke width for line and area charts.</td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>bar-radius</code></th>
+                      <td><code>--chart-bar-radius</code></td>
+                      <td>Corner radius for bars and columns.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="usage-section" id="usage" aria-labelledby="usage-title">
+        <div class="usage-header">
+          <span class="section-eyebrow">Getting started</span>
+          <h2 class="section-title" id="usage-title">Usage</h2>
+          <p class="section-lead">Import the components once, then compose charts with HTML attributes and child elements.</p>
+        </div>
+        <div class="usage-block">
+        <pre><code>&lt;<span class="tag">data-chart</span> <span class="attr">type</span>=<span class="val">"column"</span>
+  <span class="attr">value-label</span>=<span class="val">"Sales"</span>
+  <span class="attr">category-label</span>=<span class="val">"Month"</span>
+  <span class="attr">height</span>=<span class="val">"320"</span>
+  <span class="attr">show-values</span>=<span class="val">"true"</span>&gt;
+  &lt;<span class="tag">data-chart-group</span> <span class="attr">label</span>=<span class="val">"Revenue"</span> <span class="attr">color</span>=<span class="val">"#3b82f6"</span>&gt;
+    &lt;<span class="tag">data-chart-point</span> <span class="attr">label</span>=<span class="val">"Jan"</span> <span class="attr">value</span>=<span class="val">"30"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+  &lt;/<span class="tag">data-chart-group</span>&gt;
+&lt;/<span class="tag">data-chart</span>&gt;
+
+<span class="comment">&lt;!-- Same markup works for type="line" or type="area" (stacked) --&gt;</span>
+
+<span class="comment">&lt;!-- Scatter plots use x for the horizontal axis and value for y --&gt;</span>
+&lt;<span class="tag">data-chart</span> <span class="attr">type</span>=<span class="val">"scatter"</span> <span class="attr">value-label</span>=<span class="val">"Y"</span> <span class="attr">category-label</span>=<span class="val">"X"</span>&gt;
+  &lt;<span class="tag">data-chart-point</span> <span class="attr">x</span>=<span class="val">"10"</span> <span class="attr">value</span>=<span class="val">"25"</span>&gt;&lt;/<span class="tag">data-chart-point</span>&gt;
+&lt;/<span class="tag">data-chart</span>&gt;
+
+&lt;style&gt;
+  data-chart {
+    --chart-plot-bg: #f8fafc;
+    --chart-axis-color: #64748b;
+    --chart-line-width: 3px;
+  }
+  data-chart::part(column) { opacity: 0.9; }
+&lt;/style&gt;</code></pre>
+        </div>
+      </section>
+    </div>
+
+  </body>
+</html>
