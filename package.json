@@ -1,0 +1,47 @@
+{
+  "name": "data-chart-web-component",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "license": "MIT",
+  "author": "Didac Bigorda <didacbigorda@gmail.com>",
+  "keywords": [
+    "web-components",
+    "charts",
+    "data-visualization",
+    "data-chart"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DidacBA/data-chart-web-component"
+  },
+  "homepage": "https://github.com/DidacBA/data-chart-web-component",
+  "bugs": {
+    "url": "https://github.com/DidacBA/data-chart-web-component"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build && vite build --mode docs",
+    "build:lib": "tsc && vite build",
+    "build:docs": "vite build --mode docs",
+    "preview": "vite preview"
+  },
+  "main": "./lib/data-chart.js",
+  "module": "./lib/data-chart.js",
+  "exports": {
+    ".": {
+      "import": "./lib/data-chart.js",
+      "default": "./lib/data-chart.js"
+    }
+  },
+  "sideEffects": [
+    "./lib/data-chart.js"
+  ],
+  "files": [
+    "/lib"
+  ],
+  "devDependencies": {
+    "typescript": "~6.0.2",
+    "vite": "^8.1.0"
+  }
+}
