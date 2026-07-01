@@ -1,7 +1,6 @@
 {
   "name": "data-chart-web-component",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "license": "MIT",
   "author": "Didac Bigorda <didacbigorda@gmail.com>",
@@ -29,10 +28,12 @@
   },
   "main": "./lib/data-chart.js",
   "module": "./lib/data-chart.js",
+  "types": "./lib/index.d.ts",
   "exports": {
     ".": {
       "import": "./lib/data-chart.js",
-      "default": "./lib/data-chart.js"
+      "default": "./lib/data-chart.js",
+      "types": "./lib/index.d.ts"
     }
   },
   "sideEffects": [
@@ -43,6 +44,7 @@
   ],
   "devDependencies": {
     "typescript": "~6.0.2",
+    "unplugin-dts": "^1.0.3",
     "vite": "^8.1.0"
   }
 }

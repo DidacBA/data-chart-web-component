@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
+import dts from 'unplugin-dts/vite';
 
 const shared = {
   cacheDir: '.vite-cache',
@@ -19,6 +20,9 @@ export default defineConfig(({ mode }) => {
   return {
     ...shared,
     publicDir: false,
+    plugins: [dts({
+      exclude: 'src/docs.ts',
+    })],
     build: {
       lib: {
         entry: resolve(__dirname, 'src/index.ts'),
