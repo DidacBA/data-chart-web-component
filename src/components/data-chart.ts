@@ -39,6 +39,21 @@ export type ScatterSeries = {
   points: ScatterPoint[];
 };
 
+/**
+ * Web component that renders charts with a declarative HTML api.
+ * @element data-chart
+ * @extends {HTMLElement}
+ * 
+ * @attr {string} type - The type of chart to render (column, bar, line, stacked, scatter, pie)
+ * 
+ * @example
+ * <data-chart type="column">
+ *  <data-chart-group label="Revenue" color="#3b82f6">
+ *    <data-chart-point label="Jan" value="30"></data-chart-point>
+ *    <data-chart-point label="Feb" value="50"></data-chart-point>
+ *  </data-chart-group>
+ * </data-chart>
+ */
 export default class DataChart extends HTMLElement {
   static templates = templates;
   static styles = styles;
