@@ -24,7 +24,8 @@
     "build": "tsc && vite build && vite build --mode docs",
     "build:lib": "tsc && vite build",
     "build:docs": "vite build --mode docs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepublishOnly": "npm run build:lib"
   },
   "main": "./lib/data-chart.js",
   "module": "./lib/data-chart.js",
