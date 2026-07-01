@@ -322,6 +322,7 @@
         max-width: 1120px;
         margin: 0 auto;
         padding: clamp(48px, 8vw, 72px) 24px 64px;
+        min-width: 0;
       }
 
       .gallery-section {
@@ -501,6 +502,7 @@
 
       .docs-section {
         margin-bottom: clamp(48px, 8vw, 72px);
+        min-width: 0;
       }
 
       .docs-header {
@@ -510,12 +512,15 @@
       .docs-grid {
         display: grid;
         gap: 24px;
+        min-width: 0;
       }
 
       .docs-card {
         border: 1px solid var(--border);
         border-radius: calc(var(--radius) + 4px);
         background: var(--surface);
+        min-width: 0;
+        overflow: hidden;
       }
 
       .docs-card-header {
@@ -564,6 +569,8 @@
 
       .docs-table-wrap {
         overflow-x: auto;
+        max-width: 100%;
+        -webkit-overflow-scrolling: touch;
       }
 
       .docs-table {
@@ -725,6 +732,64 @@
         .segmented button {
           flex: 1 1 auto;
           text-align: center;
+        }
+
+        .docs-card-header {
+          padding: 20px 16px 16px;
+        }
+
+        .docs-card-header h3 code {
+          white-space: normal;
+          overflow-wrap: anywhere;
+        }
+
+        .docs-table-wrap {
+          overflow-x: visible;
+        }
+
+        .docs-table thead {
+          display: none;
+        }
+
+        .docs-table tbody tr {
+          display: block;
+          padding: 16px;
+        }
+
+        .docs-table tbody tr:not(:last-child) {
+          border-bottom: 1px solid var(--border);
+        }
+
+        .docs-table tbody th,
+        .docs-table tbody td {
+          display: block;
+          width: 100%;
+          padding: 0;
+          border-bottom: none;
+        }
+
+        .docs-table tbody th {
+          width: auto;
+          padding-bottom: 8px;
+        }
+
+        .docs-table tbody td + td {
+          margin-top: 8px;
+        }
+
+        .docs-table tbody td:last-child {
+          padding-bottom: 0;
+        }
+
+        .docs-table tbody tr:not(:last-child) th,
+        .docs-table tbody tr:not(:last-child) td {
+          border-bottom: none;
+        }
+
+        .docs-table code {
+          white-space: normal;
+          overflow-wrap: anywhere;
+          word-break: break-word;
         }
       }
     </style>
