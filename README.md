@@ -1,4 +1,4 @@
-# Data Chart Web Components
+# Data Chart Web Component
 
 Declarative charts in plain HTML. Lightweight, framework-agnostic web components for column, bar, line, area, scatter, and pie charts.
 
@@ -7,7 +7,7 @@ Declarative charts in plain HTML. Lightweight, framework-agnostic web components
 ### 1. Install
 
 ```bash
-npm install web-component-charts
+npm install data-chart-web-component
 ```
 
 ### 2. Import once
@@ -15,13 +15,13 @@ npm install web-component-charts
 Register the custom elements in your app entry (or a layout file):
 
 ```js
-import 'web-component-charts';
+import 'data-chart-web-component';
 ```
 
 Or import the module directly:
 
 ```js
-import 'web-component-charts/lib/data-chart.js';
+import 'data-chart-web-component/lib/data-chart.js';
 ```
 
 ### 3. Add a chart
@@ -115,7 +115,7 @@ data-chart::part(column) {
 ## JavaScript API
 
 ```js
-import { DataChart } from 'web-component-charts';
+import { DataChart } from 'data-chart-web-component';
 
 const chart = document.querySelector('data-chart');
 chart.type = 'line';
@@ -126,7 +126,7 @@ chart.type = 'line';
 Clone the repo and install dependencies:
 
 ```bash
-git clone https://github.com/DidacBA/data-chart-web-components.git
+git clone https://github.com/DidacBA/data-chart-web-component.git
 cd data-chart-web-components
 npm install
 ```
@@ -134,9 +134,9 @@ npm install
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start the documentation site locally |
-| `npm run build` | Build the library (`lib/`) and docs site (`dist/`) |
+| `npm run build` | Build the library (`lib/`) and docs site (`docs/`) |
 | `npm run build:lib` | Build the library only → `lib/data-chart.js` |
-| `npm run build:docs` | Build the documentation site → `dist/` |
+| `npm run build:docs` | Build the documentation site → `docs/` |
 | `npm run preview` | Preview the built documentation site |
 
 The library ships as an ES module at `lib/data-chart.js`.
