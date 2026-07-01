@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
     return {
       ...shared,
       build: {
-        outDir: 'dist',
+        outDir: 'docs',
         emptyOutDir: true,
       },
     };
